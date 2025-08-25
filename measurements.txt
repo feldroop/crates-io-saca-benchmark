@@ -1,0 +1,57 @@
+On AMD Ryzen 7 PRO 8840HS (octa-core)
+
+Text length: 2000000000
+Last suffix index: 1697615060
+
+none
+
+Peak memory usage: 3.3
+
+libsais
+
+Elapsed time: 78 seconds
+Peak memory usage: 8
+
+libsais64
+
+Elapsed time: 86 seconds
+Peak memory usage: 16
+
+libsais-open-mp
+
+Elapsed time: 26 seconds
+Peak memory usage: 8
+
+libsais64-open-mp
+
+Elapsed time: 29 seconds
+Peak memory usage: 16
+
+divsufsort
+
+Elapsed time: 185 seconds
+Peak memory usage: 8
+
+suffix
+
+Elapsed time: 364 seconds
+Peak memory usage: 11.2
+
+bio
+
+Elapsed time: 1092 seconds
+Peak memory usage: 21.6
+
+psacak
+
+Elapsed time: 131 seconds
+Peak memory usage: 8
+
+sais-drum
+
+Elapsed time: 353 seconds
+Peak memory usage: 16.2
+
+names = ["libsais", "libsais64", "libsais OpenMP", "libsais64 OpenMP", "divsufsort", "suffix", "bio", "psacak", "sais-drum"]
+running_times = [78, 86, 26, 29, 185, 364, 1092, 131, 353]
+peak_memory_usages = [8, 16, 8, 16, 8, 11.2, 21.6, 8, 16.2]
