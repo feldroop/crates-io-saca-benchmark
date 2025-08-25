@@ -44,6 +44,11 @@ Peak memory usage: 21.6
 
 psacak
 
+Elapsed time: 281 seconds
+Peak memory usage: 11.3
+
+psacak-threads
+
 Elapsed time: 131 seconds
 Peak memory usage: 8
 
@@ -51,7 +56,3 @@ sais-drum
 
 Elapsed time: 353 seconds
 Peak memory usage: 16.2
-
-names = ["libsais", "libsais64", "libsais OpenMP", "libsais64 OpenMP", "divsufsort", "suffix", "bio", "psacak", "sais-drum"]
-running_times = [78, 86, 26, 29, 185, 364, 1092, 131, 353]
-peak_memory_usages = [8, 16, 8, 16, 8, 11.2, 21.6, 8, 16.2]

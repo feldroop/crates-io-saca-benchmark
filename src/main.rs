@@ -19,16 +19,11 @@ enum Library {
     Suffix,
     Bio,
     Psacak,
+    PsacakThreads,
     SaisDrum,
 }
 
 fn main() {
-    // set num threads for psacak
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(8)
-        .build_global()
-        .unwrap();
-
     let cli = Cli::parse();
 
     let mut text = std::fs::read(&cli.input_path).unwrap();
@@ -51,7 +46,8 @@ fn main() {
         Library::Divsufsort => run_divsufsort(&text),
         Library::Suffix => run_suffix(text_str),
         Library::Bio => run_bio(&text),
-        Library::Psacak => run_psacak(&text),
+        Library::Psacak => run_psacak(&text, 1),
+        Library::PsacakThreads => run_psacak(&text, 8),
         Library::SaisDrum => run_sais_drum(&text),
         Library::None => 0,
     };
@@ -138,7 +134,12 @@ fn run_bio(text: &[u8]) -> i32 {
         .to_owned() as i32
 }
 
-fn run_psacak(text: &[u8]) -> i32 {
+fn run_psacak(text: &[u8], num_threads: usize) -> i32 {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build_global()
+        .unwrap();
+
     psacak::psacak(text).last().unwrap().to_owned() as i32
 }
 
