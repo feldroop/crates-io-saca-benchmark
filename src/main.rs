@@ -67,6 +67,7 @@ fn main() {
 fn run_libsais_single_threaded(text: &[u8]) -> i32 {
     libsais::SuffixArrayConstruction::for_text(text)
         .in_owned_buffer32()
+        .single_threaded()
         .run()
         .expect("libsais single threaded")
         .into_vec()
@@ -78,6 +79,7 @@ fn run_libsais_single_threaded(text: &[u8]) -> i32 {
 fn run_libsais64_single_threaded(text: &[u8]) -> i32 {
     libsais::SuffixArrayConstruction::for_text(text)
         .in_owned_buffer64()
+        .single_threaded()
         .run()
         .expect("libsais single threaded")
         .into_vec()

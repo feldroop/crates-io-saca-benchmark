@@ -580,7 +580,7 @@ checksum = "f9fbbcab51052fe104eb5e5d351cf728d30a5be1fe14d9be8a3b097481fb97de"
 [[package]]
 name = "libsais"
 version = "0.1.0"
-source = "git+https://github.com/feldroop/libsais-rs#2482ea0be67435f07c8a51b31f7118c3a43c8847"
+source = "git+https://github.com/feldroop/libsais-rs#d9b9a9c6422c4152140320346e19963b3d46e5ae"
 dependencies = [
  "either",
  "libsais-sys",
@@ -589,7 +589,7 @@ dependencies = [
 [[package]]
 name = "libsais-sys"
 version = "0.1.2"
-source = "git+https://github.com/feldroop/libsais-rs#2482ea0be67435f07c8a51b31f7118c3a43c8847"
+source = "git+https://github.com/feldroop/libsais-rs#d9b9a9c6422c4152140320346e19963b3d46e5ae"
 dependencies = [
  "cc",
  "openmp-sys",
@@ -964,7 +964,7 @@ dependencies = [
 [[package]]
 name = "sais_drum"
 version = "0.1.0"
-source = "git+https://github.com/feldroop/sais-drum#aab4633f07c50bb7403ff07fc0a437b97a720e59"
+source = "git+https://github.com/feldroop/sais-drum#428929aeabede3dffd9048b9e7ef811bb1564b7d"
 dependencies = [
  "bitvec",
  "num-traits",
