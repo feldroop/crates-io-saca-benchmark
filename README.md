@@ -24,6 +24,6 @@ The goal is to roughly compare the performance of SACAs that are available for R
 The type of the indices of the returned suffix array is provided in the legend. It has a large influence on the memory usage and on the maximum text length that the library supports. 
 
 All implementations except for `suffix` and `bio` do not need a significant amount of additional memory apart from the suffix array itself. `libsais` provides the fastest implementation and is among the most memory efficient ones. 
-Only for texts of length between $2^{31}$ (~2.1G) and $2^{32} -1$ (~4.2G) that doesn't fit into an `i32`, `psacak` might be a more memory efficient solution.
+Only for texts of length between $2^{31}$ (~2.1G) and $2^{32} -1$ (~4.2G) for which indices don't fit into an `i32`, `psacak` might be a more memory efficient solution.
 
 <img src="plot/plot.svg" />
