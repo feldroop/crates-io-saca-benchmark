@@ -13,7 +13,7 @@ The goal is to roughly compare the performance of SACAs that are available for R
 - [`suffix`]: A library for UTF8-encoded (`str`) texts and not byte arrays `[u8]`. This library therefore solves a slightly different, tricky problem, and is only included out of curiosity.
 - [`bio`]: A large package of algorithms and data structures for bioinformatics applications.
 - [`psacak`]: A stand-alone Rust implementation of a SACA with multithreading support via `rayon`.
-- [`sais-drum`]: A Rust implementation heavily inspired by [`libsais]`, unfinished and not fully optimized. (bias alert: I created this library)
+- [`sais-drum`]: A Rust implementation heavily inspired by [`libsais]`, unfinished and not fully optimized. This one is not availableon [crates.io] (bias alert: I created this library)
 
 ## Setup
 
