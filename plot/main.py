@@ -7,6 +7,18 @@ def main():
     peak_memory_usages = [8, 8, 16, 16, 8, 11.2, 21.6, 8, 8, 16.2]
     colors = ["blue","cornflowerblue","blueviolet","violet","tomato","orange","forestgreen","olive", "darkkhaki", "grey"]
 
+    #plot(names, running_times, peak_memory_usages, colors, "plot.svg")
+
+    # extra plot for libsais BWT and aux
+    names = ["libsais", "libsais with aux", "libsais 8 threads", "libsais 8 threads with aux"]
+    running_times = [258, 109, 212, 33]
+    peak_memory_usages = [12, 12.2, 12, 12.2]
+    colors = ["blue","cornflowerblue","blueviolet","violet"]
+
+    plot(names, running_times, peak_memory_usages, colors, "plot_libsais_bwt.svg")
+
+def plot(names, running_times, peak_memory_usages, colors, name):
+    x = list(range(len(names)))
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
     
     bars1 = ax1.bar(x, running_times, color=colors)
@@ -25,7 +37,8 @@ def main():
     fig.tight_layout()
 
     # plot was manually edited to position legend outside of plots
-    fig.savefig("plot.svg")
+    fig.savefig(name)
+
 
 if __name__ == "__main__":
     main()

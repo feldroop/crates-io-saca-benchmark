@@ -4,17 +4,19 @@ use windows::Win32::System::Threading::GetCurrentProcess;
 
 #[derive(clap::Parser)]
 struct Cli {
-    library: Library,
+    query: Query,
     input_path: std::path::PathBuf,
 }
 
 #[derive(Debug, Clone, clap::ValueEnum)]
-enum Library {
+enum Query {
     None,
     Libsais,
     Libsais64,
     LibsaisOpenMP,
     Libsais64OpenMP,
+    LibsaisBwt,
+    LibsaisBwtAux,
     Divsufsort,
     Suffix,
     Bio,
@@ -38,18 +40,20 @@ fn main() {
     let text_str = std::str::from_utf8(&text).unwrap();
 
     let start = std::time::Instant::now();
-    let last = match cli.library {
-        Library::Libsais => run_libsais_single_threaded(&text),
-        Library::Libsais64 => run_libsais64_single_threaded(&text),
-        Library::LibsaisOpenMP => run_libsais_multi_threaded(&text),
-        Library::Libsais64OpenMP => run_libsais64_multi_threaded(&text),
-        Library::Divsufsort => run_divsufsort(&text),
-        Library::Suffix => run_suffix(text_str),
-        Library::Bio => run_bio(&text),
-        Library::Psacak => run_psacak(&text, 1),
-        Library::PsacakThreads => run_psacak(&text, 8),
-        Library::SaisDrum => run_sais_drum(&text),
-        Library::None => 0,
+    let last = match cli.query {
+        Query::Libsais => run_libsais_single_threaded(&text),
+        Query::Libsais64 => run_libsais64_single_threaded(&text),
+        Query::LibsaisOpenMP => run_libsais_multi_threaded(&text),
+        Query::Libsais64OpenMP => run_libsais64_multi_threaded(&text),
+        Query::Divsufsort => run_divsufsort(&text),
+        Query::Suffix => run_suffix(text_str),
+        Query::Bio => run_bio(&text),
+        Query::Psacak => run_psacak(&text, 1),
+        Query::PsacakThreads => run_psacak(&text, 8),
+        Query::SaisDrum => run_sais_drum(&text),
+        Query::None => 0,
+        Query::LibsaisBwt => run_libsais_bwt(&text),
+        Query::LibsaisBwtAux => run_libsais_bwt_aux(&text),
     };
 
     let handle = unsafe { GetCurrentProcess() };
@@ -151,4 +155,48 @@ fn run_sais_drum(text: &[u8]) -> i32 {
         .last()
         .unwrap()
         .to_owned() as i32
+}
+
+// just another test I wanted to do later
+fn run_libsais_bwt(text: &[u8]) -> i32 {
+    let bwt = libsais::BwtConstruction::for_text(text)
+        .in_owned_buffer()
+        .with_owned_temporary_array_buffer32()
+        .single_threaded()
+        //.multi_threaded(libsais::ThreadCount::fixed(8))
+        .run()
+        .unwrap();
+
+    let text = bwt
+        .unbwt()
+        .with_owned_temporary_array_buffer32()
+        .single_threaded()
+        //.multi_threaded(libsais::ThreadCount::fixed(8))
+        .run()
+        .unwrap();
+
+    text.as_slice().last().unwrap().to_owned() as i32
+}
+
+// just another test I wanted to do later
+fn run_libsais_bwt_aux(text: &[u8]) -> i32 {
+    use libsais::bwt::AuxIndicesSamplingRate;
+
+    let bwt = libsais::BwtConstruction::for_text(text)
+        .in_owned_buffer()
+        .with_owned_temporary_array_buffer32()
+        .single_threaded()
+        //.multi_threaded(libsais::ThreadCount::fixed(8))
+        .with_aux_indices(AuxIndicesSamplingRate::from(32))
+        .run()
+        .unwrap();
+
+    let text = bwt
+        .unbwt()
+        .single_threaded()
+        //.multi_threaded(libsais::ThreadCount::fixed(8))
+        .run()
+        .unwrap();
+
+    text.as_slice().last().unwrap().to_owned() as i32
 }

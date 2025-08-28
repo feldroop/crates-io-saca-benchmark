@@ -1,5 +1,7 @@
 On AMD Ryzen 7 PRO 8840HS (octa-core)
 
+the 3.3 GB for the input is already subtracted
+
 Text length: 2000000000
 Last suffix index: 1697615060
 
@@ -45,7 +47,7 @@ Peak memory usage: 21.6
 psacak
 
 Elapsed time: 281 seconds
-Peak memory usage: 11.3
+Peak memory usage: 8
 
 psacak-threads
 
@@ -56,3 +58,26 @@ sais-drum
 
 Elapsed time: 353 seconds
 Peak memory usage: 16.2
+
+---------------------------------------------------------------
+libsais bwt aux test: (sampling rate 32)
+
+no aux, single threaded
+
+Elapsed time: 258 seconds
+Peak memory usage: 12
+
+aux, single threaded
+
+Elapsed time: 109 seconds
+Peak memory usage: 12.2
+
+no aux, 8 threads
+
+Elapsed time: 212 seconds
+Peak memory usage: 12
+
+aux, 8 threads
+
+Elapsed time: 33 seconds
+Peak memory usage: 12.2
