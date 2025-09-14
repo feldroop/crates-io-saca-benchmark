@@ -14,7 +14,8 @@ The goal is to roughly compare the performance of SACAs that are available for R
 - [`bio`]: A large package of algorithms and data structures for bioinformatics applications.
 - [`psacak`]: A stand-alone Rust implementation of a SACA with multithreading support via `rayon`.
 - [`sais-drum`]: A Rust implementation heavily inspired by [`libsais`], unfinished and not fully optimized. This one is not available on [crates.io]. (bias alert: I created this library)
-
+- [`sufr`]: I recently stumbled across this library, and it is not yet included in the benchmark.
+ 
 ## Setup
 
 - Input data: The first 2GB of the human genome. This makes sure that the libraries computing `i32`-based suffix arrays can participate. 
@@ -36,3 +37,4 @@ Only for texts of length between $2^{31}$ (~2.1G) and $2^{32} -1$ (~4.2G) for wh
 [`bio`]: https://github.com/rust-bio/rust-bio
 [`psacak`]: https://github.com/hucsmn/psacak
 [`sais-drum`]: https://github.com/feldroop/sais-drum 
+[`sufr`]: https://github.com/TravisWheelerLab/sufr
