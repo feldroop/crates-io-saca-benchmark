@@ -14,7 +14,7 @@ The goal is to roughly compare the performance of SACAs that are available for R
 - [`bio`]: A large package of algorithms and data structures for bioinformatics applications.
 - [`psacak`]: A stand-alone Rust implementation of a SACA with multithreading support via `rayon`.
 - [`sais-drum`]: A Rust implementation heavily inspired by [`libsais`], unfinished and not fully optimized. It now also support u32 construction, which is not included yet. (bias alert: I created this library)
-- [`sufr`]: I recently stumbled across this library, and it is not yet included in the benchmark.
+- [`sufr`]: I recently stumbled across this library, and it is not yet included in the benchmark. It also has a focus on storing the suffix array in a file and querying it efficiently, not on very fast construction.
  
 ## Setup
 
