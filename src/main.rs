@@ -1,119 +1,129 @@
-use clap::Parser;
-use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
-use windows::Win32::System::Threading::GetCurrentProcess;
+use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::Read;
 
-#[derive(clap::Parser)]
+use clap::Parser;
+use serde::{Deserialize, Serialize};
+#[derive(Debug, clap::Parser)]
 struct Cli {
-    query: Query,
+    library: Library,
     input_path: std::path::PathBuf,
 }
 
-#[derive(Debug, Clone, clap::ValueEnum)]
-enum Query {
+#[derive(Debug, Clone, Copy, clap::ValueEnum, PartialEq, Eq, Hash, Deserialize, Serialize)]
+enum Library {
     None,
     Libsais,
     Libsais64,
-    LibsaisOpenMP,
-    Libsais64OpenMP,
-    LibsaisBwt,
-    LibsaisBwtAux,
+    LibsaisOpenMp,
+    LibsaisOpenMp64,
     Divsufsort,
     Suffix,
     Bio,
     Psacak,
     PsacakThreads,
     SaisDrum,
+    SaisDrum64,
+    SufrPartial128,
 }
+
+#[derive(Deserialize, Serialize)]
+struct BenchmarkResult {
+    elapsed_time_secs: f64,
+    peak_memory_usage_gb: f64,
+}
+
+const SUFR_FILE_PATH: &str = "temp.sufr";
+const RESULTS_FILE_PATH: &str = "results.json";
 
 fn main() {
     let cli = Cli::parse();
 
-    let mut text = std::fs::read(&cli.input_path).unwrap();
-
-    text.truncate(1_999_999_999);
-
+    let mut text = vec![0; 1_999_999_999];
+    let mut file = File::open(&cli.input_path).unwrap();
+    file.read_exact(&mut text).unwrap();
     // rust-bio needs the sentinel at the end of the text
     text.push(0);
-
-    println!("Text length: {}", text.len());
-
     let text_str = std::str::from_utf8(&text).unwrap();
 
-    let start = std::time::Instant::now();
-    let last = match cli.query {
-        Query::Libsais => run_libsais_single_threaded(&text),
-        Query::Libsais64 => run_libsais64_single_threaded(&text),
-        Query::LibsaisOpenMP => run_libsais_multi_threaded(&text),
-        Query::Libsais64OpenMP => run_libsais64_multi_threaded(&text),
-        Query::Divsufsort => run_divsufsort(&text),
-        Query::Suffix => run_suffix(text_str),
-        Query::Bio => run_bio(&text),
-        Query::Psacak => run_psacak(&text, 1),
-        Query::PsacakThreads => run_psacak(&text, 8),
-        Query::SaisDrum => run_sais_drum(&text),
-        Query::None => 0,
-        Query::LibsaisBwt => run_libsais_bwt(&text),
-        Query::LibsaisBwtAux => run_libsais_bwt_aux(&text),
+    let rayon_num_threads = match cli.library {
+        Library::PsacakThreads | Library::SufrPartial128 => 8,
+        _ => 1,
     };
 
-    let handle = unsafe { GetCurrentProcess() };
-    let mut memory_info = PROCESS_MEMORY_COUNTERS::default();
-    let ptr: *mut PROCESS_MEMORY_COUNTERS = &mut memory_info;
-    unsafe {
-        GetProcessMemoryInfo(handle, ptr, std::mem::size_of_val(&memory_info) as u32).unwrap()
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(rayon_num_threads)
+        .build_global()
+        .unwrap();
+
+    let start = std::time::Instant::now();
+
+    let last = match cli.library {
+        Library::Libsais => run_libsais_single_threaded::<i32>(&text),
+        Library::Libsais64 => run_libsais_single_threaded::<i64>(&text),
+        Library::LibsaisOpenMp => run_libsais_multi_threaded::<i32>(&text),
+        Library::LibsaisOpenMp64 => run_libsais_multi_threaded::<i64>(&text),
+        Library::Divsufsort => run_divsufsort(&text),
+        Library::Suffix => run_suffix(text_str),
+        Library::Bio => run_bio(&text),
+        Library::Psacak | Library::PsacakThreads => run_psacak(&text),
+        Library::SaisDrum => run_sais_drum::<u32>(&text),
+        Library::SaisDrum64 => run_sais_drum::<usize>(&text),
+        Library::SufrPartial128 => run_sufr(text, 128),
+        Library::None => 0,
     };
 
     println!("Last suffix index: {}", last);
-    println!("Elapsed time: {} seconds", start.elapsed().as_secs());
-    println!("Peak memory usage: {}", memory_info.PeakWorkingSetSize);
+
+    let result = BenchmarkResult {
+        elapsed_time_secs: start.elapsed().as_millis() as f64 / 1_000.0,
+        peak_memory_usage_gb: process_peak_memory_usage_gb() - 2.0,
+    };
+
+    println!("Elapsed time: {} seconds", result.elapsed_time_secs);
+    println!("Peak memory usage: {} GB", result.peak_memory_usage_gb);
+
+    let mut results = if fs::exists(RESULTS_FILE_PATH).unwrap() {
+        let file = File::open(RESULTS_FILE_PATH).unwrap();
+        serde_json::from_reader(file).unwrap()
+    } else {
+        HashMap::<Library, BenchmarkResult>::new()
+    };
+
+    results.insert(cli.library, result);
+
+    let file = File::create(RESULTS_FILE_PATH).unwrap();
+    serde_json::to_writer_pretty(file, &results).unwrap();
+
+    if cli.library == Library::SufrPartial128 {
+        fs::remove_file(SUFR_FILE_PATH).unwrap();
+    }
 }
 
-fn run_libsais_single_threaded(text: &[u8]) -> i32 {
-    libsais::SuffixArrayConstruction::for_text(text)
-        .in_owned_buffer32()
+fn run_libsais_single_threaded<I: libsais::IsValidOutputFor<u8>>(text: &[u8]) -> i32 {
+    let &res = libsais::SuffixArrayConstruction::for_text(text)
+        .in_owned_buffer::<I>()
         .single_threaded()
         .run()
         .expect("libsais single threaded")
         .into_vec()
         .last()
-        .unwrap()
-        .to_owned()
+        .unwrap();
+
+    <i32 as num_traits::NumCast>::from(res).unwrap()
 }
 
-fn run_libsais64_single_threaded(text: &[u8]) -> i32 {
-    libsais::SuffixArrayConstruction::for_text(text)
-        .in_owned_buffer64()
-        .single_threaded()
-        .run()
-        .expect("libsais single threaded")
-        .into_vec()
-        .last()
-        .unwrap()
-        .to_owned() as i32
-}
-
-fn run_libsais_multi_threaded(text: &[u8]) -> i32 {
-    libsais::SuffixArrayConstruction::for_text(text)
-        .in_owned_buffer32()
+fn run_libsais_multi_threaded<I: libsais::IsValidOutputFor<u8>>(text: &[u8]) -> i32 {
+    let &res = libsais::SuffixArrayConstruction::for_text(text)
+        .in_owned_buffer::<I>()
         .multi_threaded(libsais::ThreadCount::fixed(8))
         .run()
         .expect("libsais multi threaded")
         .into_vec()
         .last()
-        .unwrap()
-        .to_owned()
-}
+        .unwrap();
 
-fn run_libsais64_multi_threaded(text: &[u8]) -> i32 {
-    libsais::SuffixArrayConstruction::for_text(text)
-        .in_owned_buffer64()
-        .multi_threaded(libsais::ThreadCount::fixed(8))
-        .run()
-        .expect("libsais64 multi threaded")
-        .into_vec()
-        .last()
-        .unwrap()
-        .to_owned() as i32
+    <i32 as num_traits::NumCast>::from(res).unwrap()
 }
 
 fn run_divsufsort(text: &[u8]) -> i32 {
@@ -140,63 +150,67 @@ fn run_bio(text: &[u8]) -> i32 {
         .to_owned() as i32
 }
 
-fn run_psacak(text: &[u8], num_threads: usize) -> i32 {
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(num_threads)
-        .build_global()
-        .unwrap();
-
+fn run_psacak(text: &[u8]) -> i32 {
     psacak::psacak(text).last().unwrap().to_owned() as i32
 }
 
-fn run_sais_drum(text: &[u8]) -> i32 {
-    sais_drum::SaisBuilder::new()
+fn run_sais_drum<I: sais_drum::IndexStorage>(text: &[u8]) -> i32 {
+    sais_drum::SaisBuilder::<_, I>::new()
         .construct_suffix_array(text)
         .last()
         .unwrap()
-        .to_owned() as i32
+        .to_owned()
+        .as_() as i32
 }
 
-// just another test I wanted to do later
-fn run_libsais_bwt(text: &[u8]) -> i32 {
-    let bwt = libsais::BwtConstruction::for_text(text)
-        .in_owned_buffer()
-        .with_owned_temporary_array_buffer32()
-        .single_threaded()
-        //.multi_threaded(libsais::ThreadCount::fixed(8))
-        .run()
-        .unwrap();
+fn run_sufr(text: Vec<u8>, max_query_len: usize) -> i32 {
+    use libsufr::{suffix_array::SuffixArray, types::SufrBuilderArgs};
 
-    let text = bwt
-        .unbwt()
-        .with_owned_temporary_array_buffer32()
-        .single_threaded()
-        //.multi_threaded(libsais::ThreadCount::fixed(8))
-        .run()
-        .unwrap();
+    let builder_args = SufrBuilderArgs {
+        text,
+        path: Some(SUFR_FILE_PATH.to_string()),
+        low_memory: true,
+        max_query_len: Some(max_query_len),
+        is_dna: false,
+        allow_ambiguity: false,
+        ignore_softmask: false,
+        sequence_starts: vec![0],
+        sequence_names: vec![String::from("seq")],
+        num_partitions: 1024,
+        seed_mask: None,
+        random_seed: 42,
+    };
 
-    text.as_slice().last().unwrap().to_owned() as i32
+    SuffixArray::write(builder_args).unwrap();
+
+    // the return values are there to make sure that nothing gets optimized away.
+    // not needed here, because a file is written.
+    0
 }
 
-// just another test I wanted to do later
-fn run_libsais_bwt_aux(text: &[u8]) -> i32 {
-    use libsais::bwt::AuxIndicesSamplingRate;
+// ---------- just for fun, I implemented the memory usage functionaliy by hand ----------
+#[cfg(windows)]
+fn process_peak_memory_usage_gb() -> f64 {
+    use windows::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
+    use windows::Win32::System::Threading::GetCurrentProcess;
 
-    let bwt = libsais::BwtConstruction::for_text(text)
-        .in_owned_buffer()
-        .with_owned_temporary_array_buffer32()
-        .single_threaded()
-        //.multi_threaded(libsais::ThreadCount::fixed(8))
-        .with_aux_indices(AuxIndicesSamplingRate::from(32))
-        .run()
-        .unwrap();
+    let handle = unsafe { GetCurrentProcess() };
+    let mut memory_info = PROCESS_MEMORY_COUNTERS::default();
+    let ptr: *mut PROCESS_MEMORY_COUNTERS = &mut memory_info;
+    // safety: standard usage of this windows API, I think it should be safe
+    unsafe {
+        GetProcessMemoryInfo(handle, ptr, std::mem::size_of_val(&memory_info) as u32).unwrap()
+    };
 
-    let text = bwt
-        .unbwt()
-        .single_threaded()
-        //.multi_threaded(libsais::ThreadCount::fixed(8))
-        .run()
-        .unwrap();
+    memory_info.PeakWorkingSetSize as f64 / 1_000_000_000.0
+}
 
-    text.as_slice().last().unwrap().to_owned() as i32
+#[cfg(unix)]
+fn process_peak_memory_usage_gb() -> f64 {
+    let mut memory_info: libc::rusage = unsafe { std::mem::zeroed() };
+    let ret =
+        unsafe { libc::getrusage(libc::RUSAGE_SELF, (&mut memory_info) as *mut libc::rusage) };
+    assert!(ret == 0);
+
+    memory_info.ru_maxrss as f64 / 1_000_000.0
 }

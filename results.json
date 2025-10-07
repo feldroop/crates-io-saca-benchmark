@@ -1,0 +1,50 @@
+{
+  "Bio": {
+    "elapsed_time_secs": 956.859,
+    "peak_memory_usage_gb": 23.92309248
+  },
+  "SaisDrum": {
+    "elapsed_time_secs": 286.169,
+    "peak_memory_usage_gb": 8.255814656
+  },
+  "LibsaisOpenMp": {
+    "elapsed_time_secs": 26.055,
+    "peak_memory_usage_gb": 8.00751104
+  },
+  "Suffix": {
+    "elapsed_time_secs": 337.861,
+    "peak_memory_usage_gb": 11.259923456
+  },
+  "SaisDrum64": {
+    "elapsed_time_secs": 294.723,
+    "peak_memory_usage_gb": 16.255818752
+  },
+  "Psacak": {
+    "elapsed_time_secs": 256.229,
+    "peak_memory_usage_gb": 8.01091072
+  },
+  "PsacakThreads": {
+    "elapsed_time_secs": 137.238,
+    "peak_memory_usage_gb": 8.0115456
+  },
+  "Divsufsort": {
+    "elapsed_time_secs": 176.659,
+    "peak_memory_usage_gb": 8.00646656
+  },
+  "Libsais": {
+    "elapsed_time_secs": 77.042,
+    "peak_memory_usage_gb": 8.006233088
+  },
+  "SufrPartial128": {
+    "elapsed_time_secs": 617.265,
+    "peak_memory_usage_gb": 2.2787676159999997
+  },
+  "LibsaisOpenMp64": {
+    "elapsed_time_secs": 35.128,
+    "peak_memory_usage_gb": 16.00644608
+  },
+  "Libsais64": {
+    "elapsed_time_secs": 78.471,
+    "peak_memory_usage_gb": 16.006171648
+  }
+}

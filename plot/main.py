@@ -1,44 +1,79 @@
 import matplotlib.pyplot as plt
+import json
+
+# key -> (name, color)
+key_to_info = {
+    "None": ("none", "black"),
+    "Libsais": ("libsais (i32)", "blue"),
+    "Libsais64": ("libsais (i64)", "blueviolet"),
+    "LibsaisOpenMp": ("libsais 8 threads (i32)", "cornflowerblue"),
+    "LibsaisOpenMp64": ("libsais 8 threads (i64)", "violet"),
+    "Divsufsort": ("divsufsort (i32)", "tomato"),
+    "Suffix": ("suffix (u32, str input)", "orange"),
+    "Bio": ("bio (usize)", "forestgreen"),
+    "Psacak": ("psacak (u32)", "olive"),
+    "PsacakThreads": ("psacak 8 threads (u32)", "darkkhaki"),
+    "SaisDrum": ("sais_drum (u32)", "grey"),
+    "SaisDrum64": ("sais_drum (u64)", "lightgrey"),
+    "SufrPartial128": ("sufr 8 threads (u32, partial sort 128, written to file)", "teal"),
+}
+
+def read_library_configs_and_result_data():
+    with open(f"../results.json") as f:
+        file_contents = f.read()
+
+    results = json.loads(file_contents)
+
+    results_list = sorted(results.items(), key=lambda tup: key_to_info[tup[0]][0])
+
+    library_configs = list(map(lambda tup: tup[0], results_list))
+    results_data = list(map(lambda tup: tup[1], results_list))
+
+    return library_configs, results_data
 
 def main():
-    names = ["libsais (i32)", "libsais 8 threads (i32)", "libsais (i64)",  "libsais 8 threads (i64)", "divsufsort (i32)", "suffix (str input, u32)", "bio (usize)", "psacak (u32)", "psacak 8 threads (u32)", "sais-drum (usize)"]
-    x = list(range(10))
-    running_times = [78, 26, 86, 29, 185, 364, 1092, 281, 131, 353]
-    peak_memory_usages = [8, 8, 16, 16, 8, 11.2, 21.6, 8, 8, 16.2]
-    colors = ["blue","cornflowerblue","blueviolet","violet","tomato","orange","forestgreen","olive", "darkkhaki", "grey"]
+    library_configs, results_data = read_library_configs_and_result_data()
 
-    #plot(names, running_times, peak_memory_usages, colors, "plot.svg")
+    running_times = list(map(lambda result: result["elapsed_time_secs"], results_data))
+    peak_memory_usages = list(map(lambda result: result["peak_memory_usage_gb"], results_data))
 
-    # extra plot for libsais BWT and aux
-    names = ["libsais", "libsais with aux", "libsais 8 threads", "libsais 8 threads with aux"]
-    running_times = [258, 109, 212, 33]
-    peak_memory_usages = [12, 12.2, 12, 12.2]
-    colors = ["blue","cornflowerblue","blueviolet","violet"]
+    n = len(library_configs)
+    x = list(reversed(range(n)))
 
-    plot(names, running_times, peak_memory_usages, colors, "plot_libsais_bwt.svg")
+    library_nice_names = list(map(lambda conf: key_to_info[conf][0], library_configs))
+    library_colors = list(map(lambda conf: key_to_info[conf][1], library_configs))
 
-def plot(names, running_times, peak_memory_usages, colors, name):
-    x = list(range(len(names)))
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 7))
     
-    bars1 = ax1.bar(x, running_times, color=colors)
-    ax1.set_title("Running time in seconds")
-    ax1.set_xticks([]) 
-    ax1.bar_label(bars1)
-    ax1.set_ylabel("seconds")
+    bar_label_fmt = "{:.1f}"
+    label_padding = 2
 
-    bars2 = ax2.bar(x, peak_memory_usages, color=colors)
-    ax2.set_title("Memory usage in gigabytes")
-    ax2.set_xticks([]) 
-    ax2.bar_label(bars2)
-    ax2.set_ylabel("gigabytes")
+    bars1 = ax1.barh(x, running_times, color=library_colors)
+    ax1.set_title("running time in seconds")
+    ax1.set_yticks([]) 
+    ax1.bar_label(bars1, fmt=bar_label_fmt, padding=label_padding)
+    ax1.set_xlabel("seconds")
+    ax1.margins(x=0.15)
 
-    fig.legend(ax1.patches, names, loc="upper center", ncol = 4)
-    fig.tight_layout()
+    bars2 = ax2.barh(x, peak_memory_usages, color=library_colors)
+    ax2.set_title("peak memory usage in gigabytes")
+    ax2.set_yticks([]) 
+    ax2.bar_label(bars2, fmt=bar_label_fmt, padding=label_padding)
+    ax2.set_xlabel("gigabytes")
+    ax2.margins(x=0.15)
 
-    # plot was manually edited to position legend outside of plots
-    fig.savefig(name)
+    fig.subplots_adjust(top=0.70)
+    fig.legend(
+        ax1.patches, 
+        library_nice_names, 
+        bbox_to_anchor=(0, 0.75, 1, 0.2),
+        bbox_transform=fig.transFigure, 
+        loc="lower center", 
+        ncol = 3
+    )
 
+    fig.tight_layout(rect=[0, 0, 1, 0.75])
+    fig.savefig(f"plot.svg", bbox_inches="tight")
 
 if __name__ == "__main__":
     main()
