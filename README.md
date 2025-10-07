@@ -1,4 +1,4 @@
-# Benchmark of suffix array construction algorithms available on crates.io
+# Benchmark of Suffix Array Construction Algorithms Available on crates.io
 
 This is a very short and simple benchmark. It is not intended to be a comprehensive analysis of suffix array construction algorithms (SACAs) in general.
 
@@ -28,7 +28,7 @@ All implementations except for [`suffix`] and [`bio`] do not need a significant 
 
 Only for texts of length between $2^{31}$ (~2.1G) and $2^{32} -1$ (~4.2G) for which indices don't fit into an `i32`, [`psacak`] might be a more memory efficient solution.
 
-The library [`sufr`] adds the useful capability to construct a suffix array in a file, with a very low memory footprint. Unlike [`libsais`], the algorithm of [`sufr`] is CPU bound and could be sped up further using more threads (in terms of wall time).
+The library [`sufr`] adds the useful capability to construct a suffix array in a file, with a very low memory footprint. Unlike [`libsais`], the algorithm of [`sufr`] is CPU bound and could be sped up further (in terms of wall time) using more threads.
 
 <img src="plot/plot.svg" />
 
